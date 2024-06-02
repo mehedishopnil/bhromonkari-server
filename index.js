@@ -25,6 +25,7 @@ async function run() {
   try {
     await client.connect();
     const usersCollection = client.db("bhromonkariDB").collection("users");
+    const tourPlacesCollection = client.db("bhromonkariDB").collection("tourPlaces");
 
     // Get all users
     app.get('/users', async (req, res) => {
@@ -51,6 +52,13 @@ async function run() {
         },
       };
       const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+
+    //Tour Place
+    app.get('/tourPlace', async (req, res) => {
+      const result = await tourPlacesCollection.find().toArray();
       res.send(result);
     });
 
