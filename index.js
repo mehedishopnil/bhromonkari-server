@@ -1,14 +1,16 @@
 const express = require("express");
-const cors = require("cors");
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-require("dotenv").config();
-
 const app = express();
+const cors = require("cors");
+require("dotenv").config();
+const port = process.env.PORT || 5000;
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 app.use(cors());
 app.use(express.json());
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.5cjch2a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+
+
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.5cjch2a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0;`
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -25,20 +27,20 @@ async function run() {
     const tourPlacesCollection = client.db("bhromonkariDB").collection("tourPlaces");
 
     // Get all users
-    app.get('/api/users', async (req, res) => {
+    app.get('/users', async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
 
     // Get a single user by email
-    app.get('/api/users/:email', async (req, res) => {
+    app.get('/users/:email', async (req, res) => {
       const email = req.params.email;
       const user = await usersCollection.findOne({ email });
       res.send(user);
     });
 
     // Update user data
-    app.put('/api/users/:email', async (req, res) => {
+    app.put('/users/:email', async (req, res) => {
       const email = req.params.email;
       const { name, photoURL } = req.body;
       const filter = { email };
@@ -52,8 +54,9 @@ async function run() {
       res.send(result);
     });
 
-    // Tour Place
-    app.get('/api/tourPlace', async (req, res) => {
+
+    //Tour Place
+    app.get('/tourPlace', async (req, res) => {
       const result = await tourPlacesCollection.find().toArray();
       res.send(result);
     });
@@ -71,4 +74,13 @@ app.get("/", (req, res) => {
   res.send("Hello from Bhromonkari Server!");
 });
 
-module.exports = app;
+app.listen(port, () => {
+  console.log(`Bhromonkari Server is running on ${port}`);
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  await client.close();
+  console.log("MongoClient disconnected on app termination");
+  process.exit(0);
+});
