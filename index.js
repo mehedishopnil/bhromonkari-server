@@ -9,7 +9,9 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 app.use(cors());
 app.use(express.json());
 
-console.log(process.env.DB_PASS);
+console.log('DB_USER:', process.env.DB_USER);
+console.log('DB_PASS:', process.env.DB_PASS);
+
 
 // Connect to the MongoDB cluster
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.5cjch2a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -35,24 +37,29 @@ async function run() {
     // User ::
     // Get all users
     app.get('/users', async (req, res) => {
-      const result = await usersCollection.find().toArray();
-      res.send(result);
+      console.log('Received request for /users');
+      try {
+        const result = await usersCollection.find().toArray();
+        console.log('Users found:', result);
+        res.send(result);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).send('Error fetching users');
+      }
     });
-
+    
     // Post a new user
-    app.post('/users', async (req, res) =>{
+    app.post('/users', async (req, res) => {
       const user = req.body;
       const result = await usersCollection.insertOne(user);
       res.json(result);
-    })
-
-
+    });
 
     // Tour Collections
     app.get('/tour-places', async (req, res) => {
       const result = await tourPlacesCollection.find().toArray();
       res.send(result);
-    })
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -80,3 +87,4 @@ process.on('SIGINT', async () => {
   console.log('MongoDB client disconnected');
   process.exit(0);
 });
+
