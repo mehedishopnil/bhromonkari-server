@@ -32,11 +32,27 @@ async function run() {
     const usersCollection = client.db("bhromonkariDB").collection("users");
     const tourPlacesCollection = client.db("bhromonkariDB").collection("tourPlaces");
 
+    // User ::
     // Get all users
     app.get('/users', async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
+
+    // Post a new user
+    app.post('/users', async (req, res) =>{
+      const user = req.body;
+      const result = await usersCollection.insertOne(user);
+      res.json(result);
+    })
+
+
+
+    // Tour Collections
+    app.get('/tour-places', async (req, res) => {
+      const result = await tourPlacesCollection.find().toArray();
+      res.send(result);
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
