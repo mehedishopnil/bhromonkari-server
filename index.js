@@ -1,15 +1,20 @@
-const express = require("express");
+const express = require('express');
 const app = express();
-const cors = require("cors");
-require("dotenv").config();
+const cors = require('cors');
+require('dotenv').config();
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
+console.log(process.env.DB_PASS);
+
+// Connect to the MongoDB cluster
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.5cjch2a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -20,64 +25,42 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
+    // Connect the client to the server
     await client.connect();
+
+    // All Data collections
     const usersCollection = client.db("bhromonkariDB").collection("users");
     const tourPlacesCollection = client.db("bhromonkariDB").collection("tourPlaces");
 
     // Get all users
-    app.get('/api/users', async (req, res) => {
+    app.get('/users', async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
 
-    // Get a single user by email
-    app.get('/api/users/:email', async (req, res) => {
-      const email = req.params.email;
-      const user = await usersCollection.findOne({ email });
-      res.send(user);
-    });
-
-    // Update user data
-    app.put('/api/users/:email', async (req, res) => {
-      const email = req.params.email;
-      const { name, photoURL } = req.body;
-      const filter = { email };
-      const updateDoc = {
-        $set: {
-          name,
-          photoURL
-        },
-      };
-      const result = await usersCollection.updateOne(filter, updateDoc);
-      res.send(result);
-    });
-
-    // Tour Place
-    app.get('/api/tourPlace', async (req, res) => {
-      const result = await tourPlacesCollection.find().toArray();
-      res.send(result);
-    });
-
+    // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error(error);
   }
 }
 
+// Start the run function
 run().catch(console.dir);
 
-app.get("/", (req, res) => {
-  res.send("Hello from Bhromonkari Server!");
+// Serve main HTML file for all other routes
+app.get('/', (req, res) => {
+  res.send('Bhromonkari server is running');
 });
 
 app.listen(port, () => {
-  console.log(`Bhromonkari Server is running on ${port}`);
+  console.log(`Bhromonkari server listening on port ${port}`);
 });
 
-// Graceful shutdown
+// Properly close the MongoDB connection on application shutdown
 process.on('SIGINT', async () => {
   await client.close();
-  console.log("MongoClient disconnected on app termination");
+  console.log('MongoDB client disconnected');
   process.exit(0);
 });
