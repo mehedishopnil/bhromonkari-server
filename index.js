@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 require("dotenv").config();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 app.use(cors());
@@ -25,20 +25,20 @@ async function run() {
     const tourPlacesCollection = client.db("bhromonkariDB").collection("tourPlaces");
 
     // Get all users
-    app.get('/users', async (req, res) => {
+    app.get('/api/users', async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
 
     // Get a single user by email
-    app.get('/users/:email', async (req, res) => {
+    app.get('/api/users/:email', async (req, res) => {
       const email = req.params.email;
       const user = await usersCollection.findOne({ email });
       res.send(user);
     });
 
     // Update user data
-    app.put('/users/:email', async (req, res) => {
+    app.put('/api/users/:email', async (req, res) => {
       const email = req.params.email;
       const { name, photoURL } = req.body;
       const filter = { email };
@@ -53,7 +53,7 @@ async function run() {
     });
 
     // Tour Place
-    app.get('/tourPlace', async (req, res) => {
+    app.get('/api/tourPlace', async (req, res) => {
       const result = await tourPlacesCollection.find().toArray();
       res.send(result);
     });
