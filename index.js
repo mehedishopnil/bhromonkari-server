@@ -61,6 +61,21 @@ async function run() {
       res.send(result);
     });
 
+    // Get a specific tour place by ID
+    app.get('/tour-places/:_id', async (req, res) => {
+      const { _id } = req.params; // Update to _id
+      try {
+        const tourPlace = await tourPlacesCollection.findOne({ _id: new ObjectId(_id) }); // Update to _id
+        if (!tourPlace) {
+          return res.status(404).send('Tour place not found');
+        }
+        res.send(tourPlace);
+      } catch (error) {
+        console.error('Error fetching tour place:', error);
+        res.status(500).send('Error fetching tour place');
+      }
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
