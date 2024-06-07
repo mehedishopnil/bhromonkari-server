@@ -9,9 +9,6 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 app.use(cors());
 app.use(express.json());
 
-console.log('DB_USER:', process.env.DB_USER);
-console.log('DB_PASS:', process.env.DB_PASS);
-
 
 // Connect to the MongoDB cluster
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.5cjch2a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -47,6 +44,11 @@ async function run() {
         res.status(500).send('Error fetching users');
       }
     });
+
+    // C = create
+    // R = read
+    // U = update
+    // D = Delete
     
     // Post a new user
     app.post('/users', async (req, res) => {
