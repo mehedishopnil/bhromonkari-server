@@ -12,7 +12,6 @@ app.use(express.json());
 console.log('DB_USER:', process.env.DB_USER);
 console.log('DB_PASS:', process.env.DB_PASS);
 
-
 // Connect to the MongoDB cluster
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.5cjch2a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -47,7 +46,7 @@ async function run() {
         res.status(500).send('Error fetching users');
       }
     });
-    
+
     // Post a new user
     app.post('/users', async (req, res) => {
       const user = req.body;
@@ -55,13 +54,33 @@ async function run() {
       res.json(result);
     });
 
+    // Update a user (partial update)
+    // Update a user
+app.patch('/users/:email', async (req, res) => {
+  const { email } = req.params;
+  const updateData = req.body;
+  try {
+    const result = await usersCollection.updateOne(
+      { email: email },
+      { $set: updateData }
+    );
+    if (result.matchedCount === 0) {
+      return res.status(404).send('User not found');
+    }
+    res.send(result);
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).send('Error updating user');
+  }
+});
+
     // Tour Collections
     app.get('/tour-places', async (req, res) => {
       const result = await tourPlacesCollection.find().toArray();
       res.send(result);
     });
 
-    // // Get a specific tour place by ID
+    // Get a specific tour place by ID
     app.get('/tour-places/:id', async (req, res) => {
       const { id } = req.params;
       try {
@@ -102,4 +121,3 @@ process.on('SIGINT', async () => {
   console.log('MongoDB client disconnected');
   process.exit(0);
 });
-
