@@ -40,7 +40,9 @@ async function run() {
       .db("bhromonkariDB")
       .collection("touristWallet");
 
-      const regularSpendingCollection = client.db("bhromonkariDB").collection("regularSpending");
+    const regularSpendingCollection = client
+      .db("bhromonkariDB")
+      .collection("regularSpending");
 
     // Routes
     app.get("/users", async (req, res) => {
@@ -182,7 +184,7 @@ async function run() {
             .json({ message: "Data already exists for this email address" });
         }
 
-        // Insert data if no existing data found
+     // Insert data if no existing data found
         const result = await touristWalletCollection.insertOne({
           email: email,
           ...budgetData,
@@ -194,25 +196,32 @@ async function run() {
       }
     });
 
-
-
-// Spending data submission
-app.post("/regular-spending", async (req, res) => {
-  const { email, spendingData } = req.body;
-  try {
-    // Insert the new spending data
-    const result = await regularSpendingCollection.insertOne({
-      email,
-      ...spendingData, // Spread the spendingData object to insert its properties directly
+    // Spending data submission
+    app.post("/regular-spending", async (req, res) => {
+      const { email, spendingData } = req.body;
+      try {
+        // Insert the new spending data
+        const result = await regularSpendingCollection.insertOne({
+          email,
+          ...spendingData, // Spread the spendingData object to insert its properties directly
+        });
+        res.send(result);
+      } catch (error) {
+        console.error("Error submitting spending data:", error);
+        res.status(500).send("Error submitting spending data");
+      }
     });
-    res.send(result);
-  } catch (error) {
-    console.error("Error submitting spending data:", error);
-    res.status(500).send("Error submitting spending data");
-  }
-});
 
-
+    // Spending data
+    app.get("/regular-spending", async (req, res) => {
+      try {
+        const result = await regularSpendingCollection.find().toArray();
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching tourist wallet:", error);
+        res.status(500).send("Error fetching tourist wallet");
+      }
+    });
 
     // Ping the database
     await client.db("admin").command({ ping: 1 });
