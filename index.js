@@ -100,6 +100,7 @@ async function run() {
       }
     });
 
+      //Hotel Data
     app.get('/tour-places/:id/hotel', async (req, res) => {
       const { id } = req.params;
       try {
@@ -117,6 +118,25 @@ async function run() {
       }
     });
 
+    //Tour Guide Data
+    app.get('/tour-places/:id/tourGuide', async (req, res) => {
+      const { id } = req.params;
+      try {
+        const tourPlace = await tourPlacesCollection.findOne(
+          { _id: new ObjectId(id) },
+          { projection: { tourGuide: 1 } } // Project only the tourGuide field
+        );
+        if (!tourPlace) {
+          return res.status(404).send('Tour place not found');
+        }
+        res.send(tourPlace.tourGuide || []);
+      } catch (error) {
+        console.error('Error fetching tourGuide:', error);
+        res.status(500).send('Error fetching tourGuide');
+      }
+    });
+
+    // Tourist Wallet Data
     app.get('/tourist-wallet', async (req, res) => {
       try {
         const result = await touristWalletCollection.find().toArray();
