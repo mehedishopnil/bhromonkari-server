@@ -9,13 +9,14 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 app.use(cors());
 app.use(express.json());
 
+// Debugging environment variables
 console.log('DB_USER:', process.env.DB_USER);
 console.log('DB_PASS:', process.env.DB_PASS);
 
-// Connect to the MongoDB cluster
+// MongoDB connection URI
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.5cjch2a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+// MongoClient options
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -24,22 +25,21 @@ const client = new MongoClient(uri, {
   }
 });
 
+// Main function to run the server
 async function run() {
   try {
     // Connect the client to the server
     await client.connect();
 
-    // All Data collections
+    // Collections
     const usersCollection = client.db("bhromonkariDB").collection("users");
     const tourPlacesCollection = client.db("bhromonkariDB").collection("tourPlaces");
+    const touristWalletCollection = client.db("bhromonkariDB").collection("touristWallet");
 
-    // User ::
-    // Get all users
+    // Routes
     app.get('/users', async (req, res) => {
-      console.log('Received request for /users');
       try {
         const result = await usersCollection.find().toArray();
-        console.log('Users found:', result);
         res.send(result);
       } catch (error) {
         console.error('Error fetching users:', error);
@@ -47,40 +47,45 @@ async function run() {
       }
     });
 
-    // Post a new user
     app.post('/users', async (req, res) => {
-      const user = req.body;
-      const result = await usersCollection.insertOne(user);
-      res.json(result);
+      try {
+        const user = req.body;
+        const result = await usersCollection.insertOne(user);
+        res.json(result);
+      } catch (error) {
+        console.error('Error creating user:', error);
+        res.status(500).send('Error creating user');
+      }
     });
 
-    // Update a user (partial update)
-    // Update a user
-app.patch('/users/:email', async (req, res) => {
-  const { email } = req.params;
-  const updateData = req.body;
-  try {
-    const result = await usersCollection.updateOne(
-      { email: email },
-      { $set: updateData }
-    );
-    if (result.matchedCount === 0) {
-      return res.status(404).send('User not found');
-    }
-    res.send(result);
-  } catch (error) {
-    console.error('Error updating user:', error);
-    res.status(500).send('Error updating user');
-  }
-});
+    app.patch('/users/:email', async (req, res) => {
+      const { email } = req.params;
+      const updateData = req.body;
+      try {
+        const result = await usersCollection.updateOne(
+          { email: email },
+          { $set: updateData }
+        );
+        if (result.matchedCount === 0) {
+          return res.status(404).send('User not found');
+        }
+        res.send(result);
+      } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).send('Error updating user');
+      }
+    });
 
-    // Tour Collections
     app.get('/tour-places', async (req, res) => {
-      const result = await tourPlacesCollection.find().toArray();
-      res.send(result);
+      try {
+        const result = await tourPlacesCollection.find().toArray();
+        res.send(result);
+      } catch (error) {
+        console.error('Error fetching tour places:', error);
+        res.status(500).send('Error fetching tour places');
+      }
     });
 
-    // Get a specific tour place by ID
     app.get('/tour-places/:id', async (req, res) => {
       const { id } = req.params;
       try {
@@ -95,13 +100,54 @@ app.patch('/users/:email', async (req, res) => {
       }
     });
 
-    // Send a ping to confirm a successful connection
+    app.get('/tour-places/:id/hotel', async (req, res) => {
+      const { id } = req.params;
+      try {
+        const tourPlace = await tourPlacesCollection.findOne(
+          { _id: new ObjectId(id) },
+          { projection: { hotel: 1 } } // Project only the hotel field
+        );
+        if (!tourPlace) {
+          return res.status(404).send('Tour place not found');
+        }
+        res.send(tourPlace.hotel || []);
+      } catch (error) {
+        console.error('Error fetching hotels:', error);
+        res.status(500).send('Error fetching hotels');
+      }
+    });
+
+    app.get('/tourist-wallet', async (req, res) => {
+      try {
+        const result = await touristWalletCollection.find().toArray();
+        res.send(result);
+      } catch (error) {
+        console.error('Error fetching tourist wallet:', error);
+        res.status(500).send('Error fetching tourist wallet');
+      }
+    });
+
+    // Ping the database
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
+
+    // Start the server
+    app.listen(port, () => {
+      console.log(`Bhromonkari server listening on port ${port}`);
+    });
+
   } catch (error) {
-    console.error(error);
+    console.error('Failed to connect to MongoDB:', error);
+    await client.close();
   }
 }
+
+// Properly close the MongoDB connection on application shutdown
+process.on('SIGINT', async () => {
+  await client.close();
+  console.log('MongoDB client disconnected');
+  process.exit(0);
+});
 
 // Start the run function
 run().catch(console.dir);
@@ -109,15 +155,4 @@ run().catch(console.dir);
 // Serve main HTML file for all other routes
 app.get('/', (req, res) => {
   res.send('Bhromonkari server is running');
-});
-
-app.listen(port, () => {
-  console.log(`Bhromonkari server listening on port ${port}`);
-});
-
-// Properly close the MongoDB connection on application shutdown
-process.on('SIGINT', async () => {
-  await client.close();
-  console.log('MongoDB client disconnected');
-  process.exit(0);
 });
