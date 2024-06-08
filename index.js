@@ -170,6 +170,25 @@ app.get("/tourist-wallet", async (req, res) => {
       }
     });
 
+
+    // Input Regular Spending Data
+app.post("/regular-spending", async (req, res) => {
+  try {
+    const spendingData = req.body;
+    console.log("Received spending data:", spendingData); // Log received data
+
+    // Assuming you need to include email in spendingData
+    const result = await regularSpendingCollection.insertOne(spendingData);
+    
+    console.log("Database insert result:", result); // Log the result of the database insert
+    res.json(result);
+  } catch (error) {
+    console.error("Error submitting spending data:", error);
+    res.status(500).send("Error submitting spending data");
+  }
+});
+
+
     // Regular Spending Data - Get by email
 app.get("/regular-spending", async (req, res) => {
   const { email } = req.query;
@@ -186,21 +205,7 @@ app.get("/regular-spending", async (req, res) => {
 });
 
 
-    // Input Regular Spending Data
-    app.post("/regular-spending", async (req, res) => {
-      const { email, spendingData } = req.body;
-      try {
-        // Insert the new spending data
-        const result = await regularSpendingCollection.insertOne({
-          email,
-          ...spendingData, // Spread the spendingData object to insert its properties directly
-        });
-        res.send(result);
-      } catch (error) {
-        console.error("Error submitting spending data:", error);
-        res.status(500).send("Error submitting spending data");
-      }
-    });
+  
 
     // Ping the database
     await client.db("admin").command({ ping: 1 });
