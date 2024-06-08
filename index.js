@@ -33,16 +33,9 @@ async function run() {
 
     // Collections
     const usersCollection = client.db("bhromonkariDB").collection("users");
-    const tourPlacesCollection = client
-      .db("bhromonkariDB")
-      .collection("tourPlaces");
-    const touristWalletCollection = client
-      .db("bhromonkariDB")
-      .collection("touristWallet");
-
-    const regularSpendingCollection = client
-      .db("bhromonkariDB")
-      .collection("regularSpending");
+    const tourPlacesCollection = client.db("bhromonkariDB").collection("tourPlaces");
+    const touristWalletCollection = client.db("bhromonkariDB").collection("touristWallet");
+    const regularSpendingCollection = client.db("bhromonkariDB").collection("regularSpending");
 
     // Routes
     app.get("/users", async (req, res) => {
@@ -110,7 +103,7 @@ async function run() {
       }
     });
 
-    //Hotel Data
+    // Hotel Data
     app.get("/tour-places/:id/hotel", async (req, res) => {
       const { id } = req.params;
       try {
@@ -128,7 +121,7 @@ async function run() {
       }
     });
 
-    //Tour Guide Data
+    // Tour Guide Data
     app.get("/tour-places/:id/tourGuide", async (req, res) => {
       const { id } = req.params;
       try {
@@ -146,16 +139,24 @@ async function run() {
       }
     });
 
-    // Tourist Wallet Data
-    app.get("/tourist-wallet", async (req, res) => {
-      try {
-        const result = await touristWalletCollection.find().toArray();
-        res.send(result);
-      } catch (error) {
-        console.error("Error fetching tourist wallet:", error);
-        res.status(500).send("Error fetching tourist wallet");
-      }
-    });
+   // Tourist Wallet Data - Get by email
+app.get("/tourist-wallet", async (req, res) => {
+  const { email } = req.query;
+  try {
+    if (!email) {
+      return res.status(400).send("Email query parameter is required");
+    }
+    const result = await touristWalletCollection.findOne({ email });
+    if (!result) {
+      return res.status(404).send("No data found for the provided email");
+    }
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching tourist wallet:", error);
+    res.status(500).send("Error fetching tourist wallet");
+  }
+});
+
 
     // Input Tourist Wallet Data
     app.post("/tourist-wallet", async (req, res) => {
@@ -169,34 +170,23 @@ async function run() {
       }
     });
 
-    // Input Tourist Wallet Data
-    app.post("/tourist-wallet", async (req, res) => {
-      try {
-        const { email, ...budgetData } = req.body;
+    // Regular Spending Data - Get by email
+app.get("/regular-spending", async (req, res) => {
+  const { email } = req.query;
+  try {
+    if (!email) {
+      return res.status(400).send("Email query parameter is required");
+    }
+    const result = await regularSpendingCollection.findOne({ email }); // Use findOne instead of find
+    res.send(result); // Send the result directly
+  } catch (error) {
+    console.error("Error fetching regular spending:", error);
+    res.status(500).send("Error fetching regular spending");
+  }
+});
 
-        // Check if data already exists for the given email
-        const existingData = await touristWalletCollection.findOne({
-          email: email,
-        });
-        if (existingData) {
-          return res
-            .status(400)
-            .json({ message: "Data already exists for this email address" });
-        }
 
-     // Insert data if no existing data found
-        const result = await touristWalletCollection.insertOne({
-          email: email,
-          ...budgetData,
-        });
-        res.json(result);
-      } catch (error) {
-        console.error("Error creating tourist wallet:", error);
-        res.status(500).send("Error creating tourist wallet");
-      }
-    });
-
-    // Spending data submission
+    // Input Regular Spending Data
     app.post("/regular-spending", async (req, res) => {
       const { email, spendingData } = req.body;
       try {
@@ -212,22 +202,9 @@ async function run() {
       }
     });
 
-    // Spending data
-    app.get("/regular-spending", async (req, res) => {
-      try {
-        const result = await regularSpendingCollection.find().toArray();
-        res.send(result);
-      } catch (error) {
-        console.error("Error fetching tourist wallet:", error);
-        res.status(500).send("Error fetching tourist wallet");
-      }
-    });
-
     // Ping the database
     await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     // Start the server
     app.listen(port, () => {
