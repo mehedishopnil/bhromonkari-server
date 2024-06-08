@@ -196,13 +196,14 @@ app.get("/regular-spending", async (req, res) => {
     if (!email) {
       return res.status(400).send("Email query parameter is required");
     }
-    const result = await regularSpendingCollection.findOne({ email }); // Use findOne instead of find
-    res.send(result); // Send the result directly
+    const result = await regularSpendingCollection.find({ email }).toArray(); // Use find and toArray to get all records
+    res.send(result); // Send the array of spending records
   } catch (error) {
     console.error("Error fetching regular spending:", error);
     res.status(500).send("Error fetching regular spending");
   }
 });
+
 
 
   
