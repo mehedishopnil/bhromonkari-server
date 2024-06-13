@@ -9,9 +9,6 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 app.use(cors());
 app.use(express.json());
 
-// Debugging environment variables
-console.log("DB_USER:", process.env.DB_USER);
-console.log("DB_PASS:", process.env.DB_PASS);
 
 // MongoDB connection URI
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.5cjch2a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -40,15 +37,24 @@ async function run() {
 
     // Routes
     app.get("/users", async (req, res) => {
+      const email = req.query.email;
+      if (!email) {
+        return res.status(400).send("Email query parameter is required");
+      }
       try {
-        const result = await usersCollection.find().toArray();
-        res.send(result);
+        const user = await usersCollection.findOne({ email: email });
+        if (user) {
+          res.send([user]); // User exists
+        } else {
+          res.send([]); // User does not exist
+        }
       } catch (error) {
-        console.error("Error fetching users:", error);
-        res.status(500).send("Error fetching users");
+        console.error("Error fetching user by email:", error);
+        res.status(500).send("Error fetching user by email");
       }
     });
 
+    // Add the POST /users route here
     app.post("/users", async (req, res) => {
       try {
         const user = req.body;
@@ -178,7 +184,7 @@ async function run() {
 
         // Assuming you need to include email in spendingData
         const result = await regularSpendingCollection.insertOne(spendingData);
-        
+
         console.log("Database insert result:", result); // Log the result of the database insert
         res.json(result);
       } catch (error) {
@@ -202,7 +208,7 @@ async function run() {
       }
     });
 
-    //Tour Plan input data
+    // Tour Plan input data
     app.post('/tour-plan', async (req, res) => {
       try {
         const tourPlanData = req.body;
@@ -218,7 +224,7 @@ async function run() {
       }
     });
 
-    //Tour Plan get data
+    // Tour Plan get data
     app.get('/tour-plan', async (req, res) => {
       const { email } = req.query;
       try {
