@@ -274,16 +274,22 @@ async function run() {
     // Tour Plan get data
     app.get('/tour-plan', async (req, res) => {
       const { email } = req.query;
+      
       try {
         if (!email) {
           return res.status(400).send("Bad Request: Email query parameter is required");
         }
-
+    
+        console.log(`Fetching tour plan for email: ${email}`);
+        
         const result = await tourPlanCollection.find({ email }).toArray();
+        
         if (result.length === 0) {
+          console.log(`No tour plans found for email: ${email}`);
           return res.status(404).send("No tour plans found for the provided email");
         }
-
+    
+        console.log(`Tour plans found: ${JSON.stringify(result)}`);
         res.status(200).json(result); // 200 OK
       } catch (error) {
         console.error("Error fetching tour plan:", error);
