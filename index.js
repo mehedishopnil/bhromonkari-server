@@ -229,7 +229,7 @@ async function run() {
         res.status(500).send("Internal Server Error: Error submitting tour plan data");
       }
     });
-    
+
 
     // Tour Plan get data
     app.get('/bookings', async (req, res) => {
@@ -253,10 +253,10 @@ async function run() {
 
 
 
-    // Bookings input data
+    // Tour-plan input data
     app.post('/tour-plan', async (req, res) => {
       try {
-        const bookingsData= req.body;
+        const tourPlanData= req.body;
         console.log("Received tour plan data:", tourPlanData);
 
         // Input validation can be done here (e.g., using a library like Joi or express-validator)
