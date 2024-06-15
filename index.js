@@ -34,6 +34,8 @@ async function run() {
     const touristWalletCollection = client.db("bhromonkariDB").collection("touristWallet");
     const regularSpendingCollection = client.db("bhromonkariDB").collection("regularSpending");
     const tourPlanCollection = client.db("bhromonkariDB").collection("tourPlan");
+    const bookingsCollection = client.db("bhromonkariDB").collection("bookings");
+
 
     // Routes
     app.get("/users", async (req, res) => {
@@ -81,7 +83,7 @@ async function run() {
       } catch (error) {
         console.error("Error updating user:", error);
         res.status(500).send("Error updating user");
-      }
+      } 
     });
 
     app.get("/tour-places", async (req, res) => {
@@ -146,6 +148,7 @@ async function run() {
       }
     });
 
+
     // Tourist Wallet Data - Get by email
     app.get("/tourist-wallet", async (req, res) => {
       const { email } = req.query;
@@ -163,6 +166,7 @@ async function run() {
         res.status(500).send("Error fetching tourist wallet");
       }
     });
+
 
     // Input Tourist Wallet Data
     app.post("/tourist-wallet", async (req, res) => {
@@ -193,6 +197,7 @@ async function run() {
       }
     });
 
+
     // Regular Spending Data - Get by email
     app.get("/regular-spending", async (req, res) => {
       const { email } = req.query;
@@ -208,10 +213,50 @@ async function run() {
       }
     });
 
+
     // Tour Plan input data
+    app.post('/bookings', async (req, res) => {
+      try {
+        const bookingsData= req.body;
+        console.log("Received tour plan data:", bookingsData);
+
+        // Input validation can be done here (e.g., using a library like Joi or express-validator)
+
+        const result = await bookingsCollection.insertOne(bookingsData);
+        res.status(201).json(result); // 201 Created
+      } catch (error) {
+        console.error("Error submitting tour plan data:", error);
+        res.status(500).send("Internal Server Error: Error submitting tour plan data");
+      }
+    });
+    
+
+    // Tour Plan get data
+    app.get('/bookings', async (req, res) => {
+      const { email } = req.query;
+      try {
+        if (!email) {
+          return res.status(400).send("Bad Request: Email query parameter is required");
+        }
+
+        const result = await bookingsCollection.find({ email }).toArray();
+        if (result.length === 0) {
+          return res.status(404).send("No tour plans found for the provided email");
+        }
+
+        res.status(200).json(result); // 200 OK
+      } catch (error) {
+        console.error("Error fetching tour plan:", error);
+        res.status(500).send("Internal Server Error: Error fetching tour plan");
+      }
+    });
+
+
+
+    // Bookings input data
     app.post('/tour-plan', async (req, res) => {
       try {
-        const tourPlanData = req.body;
+        const bookingsData= req.body;
         console.log("Received tour plan data:", tourPlanData);
 
         // Input validation can be done here (e.g., using a library like Joi or express-validator)
@@ -223,6 +268,8 @@ async function run() {
         res.status(500).send("Internal Server Error: Error submitting tour plan data");
       }
     });
+
+
 
     // Tour Plan get data
     app.get('/tour-plan', async (req, res) => {
@@ -243,6 +290,8 @@ async function run() {
         res.status(500).send("Internal Server Error: Error fetching tour plan");
       }
     });
+
+
 
     // Ping the database
     await client.db("admin").command({ ping: 1 });
