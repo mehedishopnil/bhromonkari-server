@@ -57,6 +57,17 @@ async function run() {
       }
     });
 
+     //User Data
+     app.get("/user-data", async (req, res) => {
+      try {
+        const result = await usersCollection.find().toArray();
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching tour places:", error);
+        res.status(500).send("Error fetching tour places");
+      }
+    });
+
     // Add the POST /users route here
     app.post("/users", async (req, res) => {
       try {
