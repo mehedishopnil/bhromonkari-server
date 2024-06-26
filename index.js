@@ -35,6 +35,7 @@ async function run() {
     const regularSpendingCollection = client.db("bhromonkariDB").collection("regularSpending");
     const tourPlanCollection = client.db("bhromonkariDB").collection("tourPlan");
     const bookingsCollection = client.db("bhromonkariDB").collection("bookings");
+    const reviewsDataCollection = client.db("bhromonkariDB").collection("reviewsData");
 
 
     // Routes
@@ -294,6 +295,18 @@ async function run() {
       } catch (error) {
         console.error("Error fetching tour plan:", error);
         res.status(500).send("Internal Server Error: Error fetching tour plan");
+      }
+    });
+
+
+    //ReviewsData
+    app.get("/reviews-data", async (req, res) => {
+      try {
+        const result = await reviewsDataCollection.find().toArray();
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching tour places:", error);
+        res.status(500).send("Error fetching tour places");
       }
     });
 
