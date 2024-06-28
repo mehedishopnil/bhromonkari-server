@@ -106,32 +106,32 @@ async function run() {
     });
 
     // Route to delete a user
-    app.delete("/user-data/:userId", async (req, res) => {
-      const userId = req.params.userId;
+app.delete("/user-data/:_id", async (req, res) => {
+  const { _id } = req.params; // Use _id from params
+  try {
+    if (!ObjectId.isValid(_id)) {
+      return res.status(400).json({ error: "Invalid user ID" });
+    }
 
-      try {
-        if (!ObjectId.isValid(userId)) {
-          return res.status(400).json({ error: "Invalid user ID" });
-        }
+    // Access the usersCollection directly from the initialized client
+    const usersCollection = client.db("bhromonkariDB").collection("users");
 
-        const db = client.db(dbName);
-        const usersCollection = db.collection("users");
-
-        // Perform deletion
-        const result = await usersCollection.deleteOne({
-          _id: new ObjectId(userId),
-        });
-
-        if (result.deletedCount === 0) {
-          return res.status(404).json({ error: "User not found" });
-        }
-
-        res.json({ message: "User deleted successfully" });
-      } catch (error) {
-        console.error("Error deleting user:", error);
-        res.status(500).json({ error: "Failed to delete user" });
-      }
+    // Perform deletion
+    const result = await usersCollection.deleteOne({
+      _id: new ObjectId(_id), // Convert _id to ObjectId
     });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ error: "Failed to delete user" });
+  }
+});
+
 
     // Add the POST /users route here
     app.post("/users", async (req, res) => {
