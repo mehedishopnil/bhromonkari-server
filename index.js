@@ -4,10 +4,6 @@ const cors = require("cors");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const http = require("http");
-const socketIo = require("socket.io");
-const server = http.createServer(app);
-const io = socketIo(server);
 
 
 
@@ -104,9 +100,6 @@ async function run() {
           return res.status(404).send("User not found");
         }
 
-          // Emit event to update frontend
-          io.emit("isAdminUpdate", { _id, isAdmin });
-
         res.send(result);
       } catch (error) {
         console.error("Error updating user:", error);
@@ -143,44 +136,34 @@ app.delete("/user-data/:_id", async (req, res) => {
 
 
     // Add the POST /users route here
-app.post("/users", async (req, res) => {
-  try {
-    const user = req.body;
-    const result = await usersCollection.insertOne(user);
-    
-    // Emit socket event to notify frontend about new user creation
-    io.emit("userCreated", result.ops[0]);
+    app.post("/users", async (req, res) => {
+      try {
+        const user = req.body;
+        const result = await usersCollection.insertOne(user);
+        res.json(result);
+      } catch (error) {
+        console.error("Error creating user:", error);
+        res.status(500).send("Error creating user");
+      }
+    });
 
-    res.json(result);
-  } catch (error) {
-    console.error("Error creating user:", error);
-    res.status(500).send("Error creating user");
-  }
-});
-
-
-app.patch("/users/:email", async (req, res) => {
-  const { email } = req.params;
-  const updateData = req.body;
-  try {
-    const result = await usersCollection.updateOne(
-      { email: email },
-      { $set: updateData }
-    );
-    if (result.matchedCount === 0) {
-      return res.status(404).send("User not found");
-    }
-
-    // Emit socket event to notify frontend about user update
-    io.emit("userUpdated", { email, updateData });
-
-    res.send(result);
-  } catch (error) {
-    console.error("Error updating user:", error);
-    res.status(500).send("Error updating user");
-  }
-});
-
+    app.patch("/users/:email", async (req, res) => {
+      const { email } = req.params;
+      const updateData = req.body;
+      try {
+        const result = await usersCollection.updateOne(
+          { email: email },
+          { $set: updateData }
+        );
+        if (result.matchedCount === 0) {
+          return res.status(404).send("User not found");
+        }
+        res.send(result);
+      } catch (error) {
+        console.error("Error updating user:", error);
+        res.status(500).send("Error updating user");
+      }
+    });
 
     app.get("/tour-places", async (req, res) => {
       try {
