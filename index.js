@@ -9,7 +9,6 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 app.use(cors());
 app.use(express.json());
 
-
 // MongoDB connection URI
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.5cjch2a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -30,13 +29,24 @@ async function run() {
 
     // Collections
     const usersCollection = client.db("bhromonkariDB").collection("users");
-    const tourPlacesCollection = client.db("bhromonkariDB").collection("tourPlaces");
-    const touristWalletCollection = client.db("bhromonkariDB").collection("touristWallet");
-    const regularSpendingCollection = client.db("bhromonkariDB").collection("regularSpending");
-    const tourPlanCollection = client.db("bhromonkariDB").collection("tourPlan");
-    const bookingsCollection = client.db("bhromonkariDB").collection("bookings");
-    const reviewsDataCollection = client.db("bhromonkariDB").collection("reviewsData");
-
+    const tourPlacesCollection = client
+      .db("bhromonkariDB")
+      .collection("tourPlaces");
+    const touristWalletCollection = client
+      .db("bhromonkariDB")
+      .collection("touristWallet");
+    const regularSpendingCollection = client
+      .db("bhromonkariDB")
+      .collection("regularSpending");
+    const tourPlanCollection = client
+      .db("bhromonkariDB")
+      .collection("tourPlan");
+    const bookingsCollection = client
+      .db("bhromonkariDB")
+      .collection("bookings");
+    const reviewsDataCollection = client
+      .db("bhromonkariDB")
+      .collection("reviewsData");
 
     // Routes
     app.get("/users", async (req, res) => {
@@ -57,8 +67,8 @@ async function run() {
       }
     });
 
-     //User Data
-     app.get("/user-data", async (req, res) => {
+    //User Data
+    app.get("/user-data", async (req, res) => {
       try {
         const result = await usersCollection.find().toArray();
         res.send(result);
@@ -68,24 +78,34 @@ async function run() {
       }
     });
 
-    // Add this route to handle updating user to admin
-    app.patch('/user-data/:_id', async (req, res) => {
-      const { id } = req.params;
+    //update user data
+    app.patch("/user-data/:_id", async (req, res) => {
+      const { _id } = req.params;
+      const { isAdmin } = req.body;
+    
+      // Validate the ObjectId format
+      if (!ObjectId.isValid(_id)) {
+        return res.status(400).send("Invalid user ID");
+      }
+    
       try {
         const result = await usersCollection.updateOne(
-          { _id: new ObjectId(id) },
-          { $set: { isAdmin: true } }
+          { _id: new ObjectId(_id) },
+          { $set: { isAdmin } }
         );
+    
         if (result.matchedCount === 0) {
-          return res.status(404).send('User not found');
+          return res.status(404).send("User not found");
         }
-        res.send({ message: 'User updated to admin successfully' });
+    
+        res.send(result);
       } catch (error) {
-        console.error('Error updating user to admin:', error);
-        res.status(500).send('Error updating user to admin');
+        console.error("Error updating user:", error);
+        res.status(500).send("Error updating user");
       }
     });
-    
+  
+
 
 
     // Add the POST /users route here
@@ -115,7 +135,7 @@ async function run() {
       } catch (error) {
         console.error("Error updating user:", error);
         res.status(500).send("Error updating user");
-      } 
+      }
     });
 
     app.get("/tour-places", async (req, res) => {
@@ -180,7 +200,6 @@ async function run() {
       }
     });
 
-
     // Tourist Wallet Data - Get by email
     app.get("/tourist-wallet", async (req, res) => {
       const { email } = req.query;
@@ -198,7 +217,6 @@ async function run() {
         res.status(500).send("Error fetching tourist wallet");
       }
     });
-
 
     // Input Tourist Wallet Data
     app.post("/tourist-wallet", async (req, res) => {
@@ -229,7 +247,6 @@ async function run() {
       }
     });
 
-
     // Regular Spending Data - Get by email
     app.get("/regular-spending", async (req, res) => {
       const { email } = req.query;
@@ -237,7 +254,9 @@ async function run() {
         if (!email) {
           return res.status(400).send("Email query parameter is required");
         }
-        const result = await regularSpendingCollection.find({ email }).toArray(); // Use find and toArray to get all records
+        const result = await regularSpendingCollection
+          .find({ email })
+          .toArray(); // Use find and toArray to get all records
         res.send(result); // Send the array of spending records
       } catch (error) {
         console.error("Error fetching regular spending:", error);
@@ -245,11 +264,10 @@ async function run() {
       }
     });
 
-
     // Tour Plan input data
-    app.post('/bookings', async (req, res) => {
+    app.post("/bookings", async (req, res) => {
       try {
-        const bookingsData= req.body;
+        const bookingsData = req.body;
         console.log("Received tour plan data:", bookingsData);
 
         // Input validation can be done here (e.g., using a library like Joi or express-validator)
@@ -258,22 +276,27 @@ async function run() {
         res.status(201).json(result); // 201 Created
       } catch (error) {
         console.error("Error submitting tour plan data:", error);
-        res.status(500).send("Internal Server Error: Error submitting tour plan data");
+        res
+          .status(500)
+          .send("Internal Server Error: Error submitting tour plan data");
       }
     });
 
-
     // Tour Plan get data
-    app.get('/bookings', async (req, res) => {
+    app.get("/bookings", async (req, res) => {
       const { email } = req.query;
       try {
         if (!email) {
-          return res.status(400).send("Bad Request: Email query parameter is required");
+          return res
+            .status(400)
+            .send("Bad Request: Email query parameter is required");
         }
 
         const result = await bookingsCollection.find({ email }).toArray();
         if (result.length === 0) {
-          return res.status(404).send("No tour plans found for the provided email");
+          return res
+            .status(404)
+            .send("No tour plans found for the provided email");
         }
 
         res.status(200).json(result); // 200 OK
@@ -283,12 +306,10 @@ async function run() {
       }
     });
 
-
-
     // Tour-plan input data
-    app.post('/tour-plan', async (req, res) => {
+    app.post("/tour-plan", async (req, res) => {
       try {
-        const tourPlanData= req.body;
+        const tourPlanData = req.body;
         console.log("Received tour plan data:", tourPlanData);
 
         // Input validation can be done here (e.g., using a library like Joi or express-validator)
@@ -297,30 +318,34 @@ async function run() {
         res.status(201).json(result); // 201 Created
       } catch (error) {
         console.error("Error submitting tour plan data:", error);
-        res.status(500).send("Internal Server Error: Error submitting tour plan data");
+        res
+          .status(500)
+          .send("Internal Server Error: Error submitting tour plan data");
       }
     });
 
-
-
     // Tour Plan get data
-    app.get('/tour-plan', async (req, res) => {
+    app.get("/tour-plan", async (req, res) => {
       const { email } = req.query;
-      
+
       try {
         if (!email) {
-          return res.status(400).send("Bad Request: Email query parameter is required");
+          return res
+            .status(400)
+            .send("Bad Request: Email query parameter is required");
         }
-    
+
         console.log(`Fetching tour plan for email: ${email}`);
-        
+
         const result = await tourPlanCollection.find({ email }).toArray();
-        
+
         if (result.length === 0) {
           console.log(`No tour plans found for email: ${email}`);
-          return res.status(404).send("No tour plans found for the provided email");
+          return res
+            .status(404)
+            .send("No tour plans found for the provided email");
         }
-    
+
         console.log(`Tour plans found: ${JSON.stringify(result)}`);
         res.status(200).json(result); // 200 OK
       } catch (error) {
@@ -328,7 +353,6 @@ async function run() {
         res.status(500).send("Internal Server Error: Error fetching tour plan");
       }
     });
-
 
     //ReviewsData
     app.get("/reviews-data", async (req, res) => {
@@ -341,11 +365,11 @@ async function run() {
       }
     });
 
-
-
     // Ping the database
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
 
     // Start the server
     app.listen(port, () => {
