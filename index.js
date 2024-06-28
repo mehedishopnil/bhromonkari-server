@@ -68,6 +68,26 @@ async function run() {
       }
     });
 
+    // Add this route to handle updating user to admin
+    app.patch('/user-data/:_id', async (req, res) => {
+      const { id } = req.params;
+      try {
+        const result = await usersCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { isAdmin: true } }
+        );
+        if (result.matchedCount === 0) {
+          return res.status(404).send('User not found');
+        }
+        res.send({ message: 'User updated to admin successfully' });
+      } catch (error) {
+        console.error('Error updating user to admin:', error);
+        res.status(500).send('Error updating user to admin');
+      }
+    });
+    
+
+
     // Add the POST /users route here
     app.post("/users", async (req, res) => {
       try {
