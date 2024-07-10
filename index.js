@@ -6,7 +6,6 @@ const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 
-
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -391,6 +390,27 @@ app.delete("/user-data/:_id", async (req, res) => {
         res.status(500).send("Error fetching tour places");
       }
     });
+
+
+
+    //Input ReviewsData:
+     app.post("/reviews-data", async (req, res) => {
+      try {
+        const reviewData = req.body;
+        console.log("Received tour plan data:", reviewData);
+
+        // Input validation can be done here (e.g., using a library like Joi or express-validator)
+
+        const result = await reviewsDataCollection.insertOne(reviewData);
+        res.status(201).json(result); // 201 Created
+      } catch (error) {
+        console.error("Error submitting tour plan data:", error);
+        res
+          .status(500)
+          .send("Internal Server Error: Error submitting tour plan data");
+      }
+    });
+
 
     // Ping the database
     await client.db("admin").command({ ping: 1 });
